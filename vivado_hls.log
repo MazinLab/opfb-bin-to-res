@@ -1,0 +1,39 @@
+
+****** Vivado(TM) HLS - High-Level Synthesis from C, C++ and SystemC v2019.2.1 (64-bit)
+  **** SW Build 2729669 on Thu Dec  5 04:49:17 MST 2019
+  **** IP Build 2729494 on Thu Dec  5 07:38:25 MST 2019
+    ** Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
+
+source C:/Xilinx/Vivado/2019.2/scripts/vivado_hls/hls.tcl -notrace
+INFO: [HLS 200-10] Running 'C:/Xilinx/Vivado/2019.2/bin/unwrapped/win64.o/vivado_hls.exe'
+INFO: [HLS 200-10] For user 'one' on host 'guybrush' (Windows NT_amd64 version 6.2) on Wed Jan 22 13:27:11 -0600 2020
+INFO: [HLS 200-10] In directory 'C:/Users/one/xilinx_projects/hls/opfb-bin-to-res'
+Sourcing Tcl script './script.tcl'
+INFO: [HLS 200-10] Creating and opening project 'C:/Users/one/xilinx_projects/hls/opfb-bin-to-res/opfb-bin-to-res'.
+INFO: [HLS 200-10] Adding design file 'src/bin_to_res_buffer.cpp' to the project
+INFO: [HLS 200-10] Adding design file 'src/bin_to_res_buffer.hpp' to the project
+INFO: [HLS 200-10] Adding design file 'src/bin_to_res_multibuffer.cpp' to the project
+INFO: [HLS 200-10] Adding design file 'src/bin_to_res_multibuffer_struct.cpp' to the project
+INFO: [HLS 200-10] Adding test bench file 'src/tb.cpp' to the project
+INFO: [HLS 200-10] Creating and opening solution 'C:/Users/one/xilinx_projects/hls/opfb-bin-to-res/opfb-bin-to-res/solution1'.
+INFO: [HLS 200-10] Setting target device to 'xczu28dr-ffvg1517-2-e'
+INFO: [SYN 201-201] Setting up clock 'default' with a period of 1.818ns.
+INFO: [SIM 211-2] *************** CSIM start ***************
+INFO: [SIM 211-4] CSIM will launch GCC as the compiler.
+   Compiling ../../../../src/tb.cpp in debug mode
+csim.mk:75: recipe for target 'obj/tb.o' failed
+../../../../src/tb.cpp:1:31: fatal error: bin_to_res_buffer.h: No such file or directory
+ #include "bin_to_res_buffer.h"
+                               ^
+compilation terminated.
+make: *** [obj/tb.o] Error 1
+ERROR: [SIM 211-100] 'csim_design' failed: compilation error(s).
+INFO: [SIM 211-3] *************** CSIM finish ***************
+4
+    while executing
+"source ./script.tcl"
+    ("uplevel" body line 1)
+    invoked from within
+"uplevel \#0 [list source $arg] "
+
+INFO: [Common 17-206] Exiting vivado_hls at Wed Jan 22 13:27:13 2020...
