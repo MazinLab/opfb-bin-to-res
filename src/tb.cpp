@@ -1,4 +1,4 @@
-#include "bin_to_res_buffer.h"
+#include "bin_to_res_buffer.hpp"
 
 
 /*

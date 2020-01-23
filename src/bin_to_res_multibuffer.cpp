@@ -17,7 +17,7 @@ Cache is 4096 * IQ ~ 131kbits
 combine the 8 IQs read with their rIDs and output
  */
 
-#include "bin_to_res_buffer.h"
+#include "bin_to_res_buffer.hpp"
 
 
 //Assume natural order for now

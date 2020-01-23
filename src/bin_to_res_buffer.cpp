@@ -18,7 +18,7 @@ combine the 8 IQs read with their rIDs and output
 
 #include "ap_int.h"
 #include "hls_stream.h"
-#include "bin_to_res_buffer.h"
+#include "bin_to_res_buffer.hpp"
 
 
 //Assume natural order for now
