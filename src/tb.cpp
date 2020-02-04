@@ -74,7 +74,7 @@ int main() {
 	//	fclose(fp);
 	for (int j=0;j<N_GROUPS;j++) {
 		for (int k=0; k<N_RES_PCLK; k++)
-			rid_to_bin[j][k]=j/2*N_BIN_PCLK+k;
+			rid_to_bin[j][k]=0;//j/2*N_BIN_PCLK+k;
 	}
 
 	//Run core

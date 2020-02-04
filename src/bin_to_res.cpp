@@ -44,12 +44,8 @@ void bin_to_res(opfb_stream_t i_stream[N_GROUPS], opfb_stream_t q_stream[N_GROUP
 		//Load the correct values from the cache
 		resstream_t temp;
 		temp.last=group==N_GROUPS-1;
-		//if (primed) {
-			readcaches: for (unsigned int i=0; i<N_RES_PCLK; i++) temp.data[i]=cache[i][rid_to_bin[group][i]];
-		//} else for (unsigned int i=0; i<N_RES_PCLK; i++) temp.data[i]=iq_t(0,0);
-
+		readcaches: for (unsigned int i=0; i<N_RES_PCLK; i++)
+			temp.data[i]=cache[i][rid_to_bin[group][i]];
 		res_stream[group]=temp;
-
-		//primed|=group==N_GROUPS-1;
 	}
 }
