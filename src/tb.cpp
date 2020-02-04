@@ -39,18 +39,19 @@
 
 int main() {
 
-	//Step 1 generate input and output expected arrays
-	int res=0;
+	//Setup
 	binndx_t rid_to_bin[N_GROUPS][N_RES_PCLK];
 	opfb_stream_t istream[N_OPFB_CYCLES][N_GROUPS], qstream[N_OPFB_CYCLES][N_GROUPS];
-	resstream_t out;
+	resstream_t out[N_OPFB_CYCLES][N_GROUPS];
 	bool fail=false;
 
 	//i counts up, q counts down, both shifted by cycle (so 0-4095 & 4095-0, 4096-8191 & 8191-4096, ...)
 	for (int i=0;i<N_OPFB_CYCLES;i++) {
 		for (int j=0;j<N_GROUPS;j++) {
-			for (int k=0; k<N_BIN_PCLK; k++) istream[i][j].data[k]=i*N_PFB_BINS + (j*N_BIN_PCLK+k);
-			for (int k=0; k<N_BIN_PCLK; k++) qstream[i][j].data[k]=(i+1)*N_PFB_BINS -(j*N_BIN_PCLK+k);
+			for (int k=0; k<N_BIN_PCLK; k++) {
+				istream[i][j].data[k]=i*N_PFB_BINS + (j*N_BIN_PCLK+k);
+				qstream[i][j].data[k]=(i+1)*N_PFB_BINS -(j*N_BIN_PCLK+k);
+			}
 			istream[i][j].last=j==N_GROUPS-1;
 			qstream[i][j].last=j==N_GROUPS-1;
 		}
@@ -72,27 +73,56 @@ int main() {
 	//	}
 	//	fclose(fp);
 	for (int j=0;j<N_GROUPS;j++) {
-		for (int k=0; k<N_RES_PCLK; k++) rid_to_bin[j][k]=j/2*N_BIN_PCLK+k;
+		for (int k=0; k<N_RES_PCLK; k++)
+			rid_to_bin[j][k]=j/2*N_BIN_PCLK+k;
 	}
 
+	//Run core
+	//NB w/o static copy arguments the cosim TB sigsegv!
+	for (int i=0;i<N_OPFB_CYCLES;i++) {
 
-	//Run core & compare results
+		//Copy in, trying to figure out cosim fail
+		static opfb_stream_t itmp[N_GROUPS], qtmp[N_GROUPS];
+		static resstream_t otmp[N_GROUPS];
+		for (int j=0;j<N_GROUPS;j++){
+			itmp[j]=istream[i][j];
+			qtmp[j]=qstream[i][j];
+		}
+
+		//Call core
+		bin_to_res(itmp, qtmp, otmp, rid_to_bin);
+
+		//Copy out, trying to figure out cosim fail
+		for (int j=0;j<N_GROUPS;j++)
+			out[i][j]=otmp[j];
+	}
+
+	//Compare results
 	for (int i=0;i<N_OPFB_CYCLES;i++) {
 		for (int j=0;j<N_GROUPS;j++) {
-
-			bin_to_res(istream[i][j], qstream[i][j], out, rid_to_bin);
-
-			if (i==0) continue; //takes a cycle to prime the buffer
 			for (int k=0;k<N_RES_PCLK;k++) {
+				//if (i==0) continue; //takes a cycle to prime the buffer
 				unsigned int bin=rid_to_bin[j][k].to_uint();
-				iq_t expected=iq_t(istream[i-1][bin/N_BIN_PCLK].data[bin%N_BIN_PCLK], qstream[i-1][bin/N_BIN_PCLK].data[bin%N_BIN_PCLK]);
-				std::cout<<"Out "<<j<<","<<k<<": "<<out.data[k]<<" Bin: "<<bin<<" ("<<bin/N_BIN_PCLK<<","<<bin%N_BIN_PCLK<<") Expected: "<<expected<<"\n";
-				if (out.data[k] != expected || out.last != istream[i][j].last) {
+				unsigned int group=bin/N_BIN_PCLK;
+				unsigned int ndx=bin%N_BIN_PCLK;
+				iq_t expected=iq_t(istream[i][group].data[ndx], qstream[i][group].data[ndx]);
+				std::cout<<"Out "<<i<<","<<j<<","<<k<<": "<<out[i][j].data[k];
+				std::cout<<" Bin: "<<bin<<" ("<<group<<","<<ndx<<")";
+				std::cout<<" Expected: "<<expected<<"\n";
+				if (out[i][j].data[k] != expected ) {
+					fail|=true;
+				}
+				if(out[i][j].last != istream[i][j].last){
+					std::cout<<"last mismatch!!!!\n";
 					fail|=true;
 				}
 			}
 		}
 	}
+
+	if (fail) std::cout<<"FAIL!\n";
+	else std::cout<<"PASS!\n";
+
 	return fail;
 
 }
