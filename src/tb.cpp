@@ -1,6 +1,3 @@
-#include "bin_to_res_buffer.hpp"
-
-
 /*
  * Test bench for IP to convert overlapped polyphase filter bank I & Q streams into
  * streams of IQ values corresponding to individual resonators. The OPFB yields 4096 IQ bins (16 consecutive per clock)
@@ -36,53 +33,66 @@
  * not involve such an inefficient cache!
  *
  */
-
+#include "bin_to_res.hpp"
 #define N_OPFB_CYCLES 2
-#define N_SAMPLES  N_OPFB_CYCLES*N_CYCLES
+#define N_SAMPLES  N_OPFB_CYCLES*N_GROUPS
 
 int main() {
 
 	//Step 1 generate input and output expected arrays
 	int res=0;
-	binndx_t rid_to_bin[N_CYCLES][N_RES_PER_CLOCK];
-	opfb_stream_t istream[N_OPFB_CYCLES][N_CYCLES], qstream[N_OPFB_CYCLES][N_CYCLES];
-	resIQ_stream_t out[8];
+	binndx_t rid_to_bin[N_GROUPS][N_RES_PCLK];
+	opfb_stream_t istream[N_OPFB_CYCLES][N_GROUPS], qstream[N_OPFB_CYCLES][N_GROUPS];
+	resstream_t out;
+	bool fail=false;
 
 	//i counts up, q counts down, both shifted by cycle (so 0-4095 & 4095-0, 4096-8191 & 8191-4096, ...)
 	for (int i=0;i<N_OPFB_CYCLES;i++) {
-		for (int j=0;j<N_CYCLES;j++) {
-			for (int k=0; k<N_PFB_BINS_PER_CLK; k++) istream[i][j].data.val[k]=i*N_PFB_BINS + (j*N_PFB_BINS_PER_CLK+k);
-			for (int k=0; k<N_PFB_BINS_PER_CLK; k++) qstream[i][j].data.val[k]=(i+1)*N_PFB_BINS -(j*N_PFB_BINS_PER_CLK+k);
-			istream[i][j].user=j;
-			qstream[i][j].user=j;
+		for (int j=0;j<N_GROUPS;j++) {
+			for (int k=0; k<N_BIN_PCLK; k++) istream[i][j].data[k]=i*N_PFB_BINS + (j*N_BIN_PCLK+k);
+			for (int k=0; k<N_BIN_PCLK; k++) qstream[i][j].data[k]=(i+1)*N_PFB_BINS -(j*N_BIN_PCLK+k);
+			istream[i][j].last=j==N_GROUPS-1;
+			qstream[i][j].last=j==N_GROUPS-1;
 		}
 	}
 
 	//Load rid_to_bin
-	for (int j=0;j<N_CYCLES;j++) {
-		for (int k=0; k<N_RES_PER_CLOCK; k++) rid_to_bin[j][k]=j<<4|k*2;
+	//	//Load in bin to res duplication factors
+	//	FILE *fp;
+	//	unsigned int in_bin;
+	//	fp=fopen("res_in_bin.dat", "r");
+	//	if (fp==NULL) {
+	//		cout<<"Null file"<<endl;
+	//		return 1;
+	//	}
+	//	for (int i=0; i<N_RES_GROUPS*N_BIN_PCLK; i++){
+	//		fscanf(fp, "%d", &in_bin);
+	//		in_bin = in_bin > MAX_RES_PBIN ? MAX_RES_PBIN:in_bin;
+	//		bin2resmap[i/N_BIN_PCLK].data[i%N_BIN_PCLK] = binmap_t(in_bin);
+	//	}
+	//	fclose(fp);
+	for (int j=0;j<N_GROUPS;j++) {
+		for (int k=0; k<N_RES_PCLK; k++) rid_to_bin[j][k]=j/2*N_BIN_PCLK+k;
 	}
 
 
-	//Run core
+	//Run core & compare results
 	for (int i=0;i<N_OPFB_CYCLES;i++) {
-		res=0;
-		for (int j=0;j<N_CYCLES;j++) {
-			bin_to_res_buff_multibuffer(istream[i][j], qstream[i][j],
-					out[0], out[1], out[2], out[3], out[4], out[5], out[6], out[7], rid_to_bin);
+		for (int j=0;j<N_GROUPS;j++) {
+
+			bin_to_res(istream[i][j], qstream[i][j], out, rid_to_bin);
+
 			if (i==0) continue; //takes a cycle to prime the buffer
-			for (int k=0;k<N_RES_PER_CLOCK;k++) {
-				int cycle=rid_to_bin[j][k].to_int()>>4, bin=rid_to_bin[j][k].to_int()&0xF;
-				if (out[k].data.val.real().to_int() != istream[i-1][cycle].data.val[bin].to_int() ||
-					out[k].data.val.imag().to_int() != qstream[i-1][cycle].data.val[bin].to_int() ||
-					out[k].user.to_int() != res) {
-					return 1;
+			for (int k=0;k<N_RES_PCLK;k++) {
+				unsigned int bin=rid_to_bin[j][k].to_uint();
+				iq_t expected=iq_t(istream[i-1][bin/N_BIN_PCLK].data[bin%N_BIN_PCLK], qstream[i-1][bin/N_BIN_PCLK].data[bin%N_BIN_PCLK]);
+				std::cout<<"Out "<<j<<","<<k<<": "<<out.data[k]<<" Bin: "<<bin<<" ("<<bin/N_BIN_PCLK<<","<<bin%N_BIN_PCLK<<") Expected: "<<expected<<"\n";
+				if (out.data[k] != expected || out.last != istream[i][j].last) {
+					fail|=true;
 				}
-				res++;
 			}
 		}
 	}
-//Compare results
-	return 0;
+	return fail;
 
 }
