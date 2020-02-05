@@ -75,7 +75,7 @@ int main() {
 	int res=0;
 	for (int j=0;j<N_GROUPS;j++) {
 		for (int k=0; k<N_RES_PCLK; k++)
-			rid_to_bin[j][k]=res++;//j/2*N_BIN_PCLK+k;
+			rid_to_bin[j][k]=res++; //Add 2048 here to vet the core in an alternate manner
 	}
 
 	//Run core

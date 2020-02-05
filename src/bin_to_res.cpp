@@ -15,13 +15,12 @@ void bin_to_res(opfb_stream_t i_stream[N_GROUPS], opfb_stream_t q_stream[N_GROUP
 #pragma HLS INTERFACE axis port=i_stream //depth=256
 #pragma HLS INTERFACE axis port=q_stream //depth=256
 #pragma HLS INTERFACE axis port=res_stream //depth=256
-#pragma HLS INTERFACE s_axilite port=rid_to_bin bundle=control //depth=2048
+//#pragma HLS INTERFACE s_axilite port=rid_to_bin //bundle=control //depth=2048
 #pragma HLS INTERFACE s_axilite port=return  //depth=256//bundle=control depth=256
 #pragma HLS ARRAY_RESHAPE variable=rid_to_bin complete dim=2
 
 	// Cache
 	static iq_t cache[N_RES_PCLK][N_PFB_BINS];
-	static bool primed=false;
 #pragma HLS DATA_PACK variable=cache
 #pragma HLS ARRAY_PARTITION variable=cache cyclic factor=16 dim=2
 #pragma HLS ARRAY_PARTITION variable=cache complete dim=1
@@ -30,15 +29,12 @@ void bin_to_res(opfb_stream_t i_stream[N_GROUPS], opfb_stream_t q_stream[N_GROUP
 #pragma HLS pipeline rewind
 		opfb_stream_t i_in=i_stream[group];
 		opfb_stream_t q_in=q_stream[group];
-		binndx_t offset=group*N_BIN_PCLK;
 
 		//Cache the new values
 		newbins: for (unsigned int i=0; i<N_BIN_PCLK; i++){
-			iq_t iq;
-			iq.real(i_in.data[i]);
-			iq.imag(q_in.data[i]);
+			iq_t iq=iq_t(i_in.data[i], q_in.data[i]);
 			loadcache: for (int j=0;j<N_RES_PCLK;j++)
-				cache[j][offset+i]=iq;
+				cache[j][group*N_BIN_PCLK+i]=iq;
 		}
 
 		//Load the correct values from the cache
