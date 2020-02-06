@@ -12,11 +12,13 @@ Write the 16 new bins.
 void bin_to_res(opfb_stream_t &i_stream, opfb_stream_t &q_stream,
 				resstream_t &res_stream, binndx_t rid_to_bin[N_GROUPS][N_RES_PCLK]) {
 #pragma HLS PIPELINE II=1
-#pragma HLS INTERFACE axis port=i_stream //depth=256
-#pragma HLS INTERFACE axis port=q_stream //depth=256
-#pragma HLS INTERFACE axis port=res_stream //depth=256
-//#pragma HLS INTERFACE s_axilite port=rid_to_bin //bundle=control //depth=2048
-#pragma HLS INTERFACE ap_ctrl_none port=return  //depth=256//bundle=control depth=256
+#pragma HLS INTERFACE axis register reverse port=i_stream //depth=256
+#pragma HLS INTERFACE axis register reverse port=q_stream //depth=256
+#pragma HLS INTERFACE axis register forward port=res_stream //depth=256
+//#pragma HLS INTERFACE m_axi depth=256 latency=16 port=rid_to_bin num_read_outstanding=16 max_read_burst_length=16
+#pragma HLS INTERFACE s_axilite port=rid_to_bin clock=S_AXI_clk name=S_AXI_resmap
+//#pragma HLS INTERFACE s_axilite register depth=256 latency=2 port=return bundle=ctrl //depth=2048
+#pragma HLS INTERFACE ap_ctrl_none port=return
 #pragma HLS ARRAY_RESHAPE variable=rid_to_bin complete dim=2
 
 	// Cache
