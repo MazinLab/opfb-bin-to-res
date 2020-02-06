@@ -27,8 +27,8 @@ typedef struct opfb_stream_t{
     ap_uint<1> last;
 } opfb_stream_t;
 
-void bin_to_res(opfb_stream_t i_stream[N_GROUPS], opfb_stream_t q_stream[N_GROUPS],
-				resstream_t out[N_GROUPS], binndx_t rid_to_bin[N_GROUPS][N_RES_PCLK]);
+void bin_to_res(opfb_stream_t &i_stream, opfb_stream_t &q_stream,
+				resstream_t &out, binndx_t rid_to_bin[N_GROUPS][N_RES_PCLK]);
 
 
 #endif

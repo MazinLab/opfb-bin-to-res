@@ -91,7 +91,7 @@ int main() {
 		}
 
 		//Call core
-		bin_to_res(itmp, qtmp, otmp, rid_to_bin);
+		for (int j=0;j<N_GROUPS; j++) bin_to_res(itmp[j], qtmp[j], otmp[j], rid_to_bin);
 
 		//Copy out, trying to figure out cosim fail
 		for (int j=0;j<N_GROUPS;j++)
