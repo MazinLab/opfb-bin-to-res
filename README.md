@@ -48,4 +48,4 @@ Each cycle the core outputs 8 cache values corresponding to the bins for the nex
 
 This allows any resonator to be drawn from any bin and, though it does not matter for correctness, it should be notes that depending on the values assigned to resonator map  resonators may be drawn from both before and after the current cache write address and thus be 256 cycles out of phase. 
 
-The resonator map can be programmed directly from PYNQ using mkidgen3.blocks.Bin2ResBlock (see [mkidgen3](https://github.com/MazinLab/MKIDGen3)). An example block diagram for testing the core is contained in (gen3-reschan)[] and looks roughly like ![](docs/bd.png)
+The resonator map can be programmed directly from PYNQ using mkidgen3.blocks.Bin2ResBlock (see [mkidgen3](https://github.com/MazinLab/MKIDGen3)). An example block diagram for testing the core is contained in [gen3-reschan](https://github.com/MazinLab/gen3-reschan) and looks roughly like ![](docs/bd.png)
