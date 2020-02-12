@@ -11,104 +11,104 @@ int XBin_to_res_CfgInitialize(XBin_to_res *InstancePtr, XBin_to_res_Config *Conf
     Xil_AssertNonvoid(InstancePtr != NULL);
     Xil_AssertNonvoid(ConfigPtr != NULL);
 
-    InstancePtr->Axilites_BaseAddress = ConfigPtr->Axilites_BaseAddress;
+    InstancePtr->Ctrl_BaseAddress = ConfigPtr->Ctrl_BaseAddress;
     InstancePtr->IsReady = XIL_COMPONENT_IS_READY;
 
     return XST_SUCCESS;
 }
 #endif
 
-u32 XBin_to_res_Get_S_AXI_resmap_V_BaseAddress(XBin_to_res *InstancePtr) {
+u32 XBin_to_res_Get_resmap_V_BaseAddress(XBin_to_res *InstancePtr) {
     Xil_AssertNonvoid(InstancePtr != NULL);
     Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
 
-    return (InstancePtr->Axilites_BaseAddress + XBIN_TO_RES_AXILITES_ADDR_S_AXI_RESMAP_V_BASE);
+    return (InstancePtr->Ctrl_BaseAddress + XBIN_TO_RES_CTRL_ADDR_RESMAP_V_BASE);
 }
 
-u32 XBin_to_res_Get_S_AXI_resmap_V_HighAddress(XBin_to_res *InstancePtr) {
+u32 XBin_to_res_Get_resmap_V_HighAddress(XBin_to_res *InstancePtr) {
     Xil_AssertNonvoid(InstancePtr != NULL);
     Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
 
-    return (InstancePtr->Axilites_BaseAddress + XBIN_TO_RES_AXILITES_ADDR_S_AXI_RESMAP_V_HIGH);
+    return (InstancePtr->Ctrl_BaseAddress + XBIN_TO_RES_CTRL_ADDR_RESMAP_V_HIGH);
 }
 
-u32 XBin_to_res_Get_S_AXI_resmap_V_TotalBytes(XBin_to_res *InstancePtr) {
+u32 XBin_to_res_Get_resmap_V_TotalBytes(XBin_to_res *InstancePtr) {
     Xil_AssertNonvoid(InstancePtr != NULL);
     Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
 
-    return (XBIN_TO_RES_AXILITES_ADDR_S_AXI_RESMAP_V_HIGH - XBIN_TO_RES_AXILITES_ADDR_S_AXI_RESMAP_V_BASE + 1);
+    return (XBIN_TO_RES_CTRL_ADDR_RESMAP_V_HIGH - XBIN_TO_RES_CTRL_ADDR_RESMAP_V_BASE + 1);
 }
 
-u32 XBin_to_res_Get_S_AXI_resmap_V_BitWidth(XBin_to_res *InstancePtr) {
+u32 XBin_to_res_Get_resmap_V_BitWidth(XBin_to_res *InstancePtr) {
     Xil_AssertNonvoid(InstancePtr != NULL);
     Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
 
-    return XBIN_TO_RES_AXILITES_WIDTH_S_AXI_RESMAP_V;
+    return XBIN_TO_RES_CTRL_WIDTH_RESMAP_V;
 }
 
-u32 XBin_to_res_Get_S_AXI_resmap_V_Depth(XBin_to_res *InstancePtr) {
+u32 XBin_to_res_Get_resmap_V_Depth(XBin_to_res *InstancePtr) {
     Xil_AssertNonvoid(InstancePtr != NULL);
     Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
 
-    return XBIN_TO_RES_AXILITES_DEPTH_S_AXI_RESMAP_V;
+    return XBIN_TO_RES_CTRL_DEPTH_RESMAP_V;
 }
 
-u32 XBin_to_res_Write_S_AXI_resmap_V_Words(XBin_to_res *InstancePtr, int offset, int *data, int length) {
+u32 XBin_to_res_Write_resmap_V_Words(XBin_to_res *InstancePtr, int offset, int *data, int length) {
     Xil_AssertNonvoid(InstancePtr != NULL);
     Xil_AssertNonvoid(InstancePtr -> IsReady == XIL_COMPONENT_IS_READY);
 
     int i;
 
-    if ((offset + length)*4 > (XBIN_TO_RES_AXILITES_ADDR_S_AXI_RESMAP_V_HIGH - XBIN_TO_RES_AXILITES_ADDR_S_AXI_RESMAP_V_BASE + 1))
+    if ((offset + length)*4 > (XBIN_TO_RES_CTRL_ADDR_RESMAP_V_HIGH - XBIN_TO_RES_CTRL_ADDR_RESMAP_V_BASE + 1))
         return 0;
 
     for (i = 0; i < length; i++) {
-        *(int *)(InstancePtr->Axilites_BaseAddress + XBIN_TO_RES_AXILITES_ADDR_S_AXI_RESMAP_V_BASE + (offset + i)*4) = *(data + i);
+        *(int *)(InstancePtr->Ctrl_BaseAddress + XBIN_TO_RES_CTRL_ADDR_RESMAP_V_BASE + (offset + i)*4) = *(data + i);
     }
     return length;
 }
 
-u32 XBin_to_res_Read_S_AXI_resmap_V_Words(XBin_to_res *InstancePtr, int offset, int *data, int length) {
+u32 XBin_to_res_Read_resmap_V_Words(XBin_to_res *InstancePtr, int offset, int *data, int length) {
     Xil_AssertNonvoid(InstancePtr != NULL);
     Xil_AssertNonvoid(InstancePtr -> IsReady == XIL_COMPONENT_IS_READY);
 
     int i;
 
-    if ((offset + length)*4 > (XBIN_TO_RES_AXILITES_ADDR_S_AXI_RESMAP_V_HIGH - XBIN_TO_RES_AXILITES_ADDR_S_AXI_RESMAP_V_BASE + 1))
+    if ((offset + length)*4 > (XBIN_TO_RES_CTRL_ADDR_RESMAP_V_HIGH - XBIN_TO_RES_CTRL_ADDR_RESMAP_V_BASE + 1))
         return 0;
 
     for (i = 0; i < length; i++) {
-        *(data + i) = *(int *)(InstancePtr->Axilites_BaseAddress + XBIN_TO_RES_AXILITES_ADDR_S_AXI_RESMAP_V_BASE + (offset + i)*4);
+        *(data + i) = *(int *)(InstancePtr->Ctrl_BaseAddress + XBIN_TO_RES_CTRL_ADDR_RESMAP_V_BASE + (offset + i)*4);
     }
     return length;
 }
 
-u32 XBin_to_res_Write_S_AXI_resmap_V_Bytes(XBin_to_res *InstancePtr, int offset, char *data, int length) {
+u32 XBin_to_res_Write_resmap_V_Bytes(XBin_to_res *InstancePtr, int offset, char *data, int length) {
     Xil_AssertNonvoid(InstancePtr != NULL);
     Xil_AssertNonvoid(InstancePtr -> IsReady == XIL_COMPONENT_IS_READY);
 
     int i;
 
-    if ((offset + length) > (XBIN_TO_RES_AXILITES_ADDR_S_AXI_RESMAP_V_HIGH - XBIN_TO_RES_AXILITES_ADDR_S_AXI_RESMAP_V_BASE + 1))
+    if ((offset + length) > (XBIN_TO_RES_CTRL_ADDR_RESMAP_V_HIGH - XBIN_TO_RES_CTRL_ADDR_RESMAP_V_BASE + 1))
         return 0;
 
     for (i = 0; i < length; i++) {
-        *(char *)(InstancePtr->Axilites_BaseAddress + XBIN_TO_RES_AXILITES_ADDR_S_AXI_RESMAP_V_BASE + offset + i) = *(data + i);
+        *(char *)(InstancePtr->Ctrl_BaseAddress + XBIN_TO_RES_CTRL_ADDR_RESMAP_V_BASE + offset + i) = *(data + i);
     }
     return length;
 }
 
-u32 XBin_to_res_Read_S_AXI_resmap_V_Bytes(XBin_to_res *InstancePtr, int offset, char *data, int length) {
+u32 XBin_to_res_Read_resmap_V_Bytes(XBin_to_res *InstancePtr, int offset, char *data, int length) {
     Xil_AssertNonvoid(InstancePtr != NULL);
     Xil_AssertNonvoid(InstancePtr -> IsReady == XIL_COMPONENT_IS_READY);
 
     int i;
 
-    if ((offset + length) > (XBIN_TO_RES_AXILITES_ADDR_S_AXI_RESMAP_V_HIGH - XBIN_TO_RES_AXILITES_ADDR_S_AXI_RESMAP_V_BASE + 1))
+    if ((offset + length) > (XBIN_TO_RES_CTRL_ADDR_RESMAP_V_HIGH - XBIN_TO_RES_CTRL_ADDR_RESMAP_V_BASE + 1))
         return 0;
 
     for (i = 0; i < length; i++) {
-        *(data + i) = *(char *)(InstancePtr->Axilites_BaseAddress + XBIN_TO_RES_AXILITES_ADDR_S_AXI_RESMAP_V_BASE + offset + i);
+        *(data + i) = *(char *)(InstancePtr->Ctrl_BaseAddress + XBIN_TO_RES_CTRL_ADDR_RESMAP_V_BASE + offset + i);
     }
     return length;
 }

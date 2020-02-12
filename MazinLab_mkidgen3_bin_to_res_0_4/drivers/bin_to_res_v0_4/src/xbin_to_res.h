@@ -37,12 +37,12 @@ typedef uint32_t u32;
 #else
 typedef struct {
     u16 DeviceId;
-    u32 Axilites_BaseAddress;
+    u32 Ctrl_BaseAddress;
 } XBin_to_res_Config;
 #endif
 
 typedef struct {
-    u32 Axilites_BaseAddress;
+    u32 Ctrl_BaseAddress;
     u32 IsReady;
 } XBin_to_res;
 
@@ -50,7 +50,7 @@ typedef struct {
     u32 word_0;
     u32 word_1;
     u32 word_2;
-} XBin_to_res_S_axi_resmap_v;
+} XBin_to_res_Resmap_v;
 
 /***************** Macros (Inline Functions) Definitions *********************/
 #ifndef __linux__
@@ -84,15 +84,15 @@ int XBin_to_res_Release(XBin_to_res *InstancePtr);
 #endif
 
 
-u32 XBin_to_res_Get_S_AXI_resmap_V_BaseAddress(XBin_to_res *InstancePtr);
-u32 XBin_to_res_Get_S_AXI_resmap_V_HighAddress(XBin_to_res *InstancePtr);
-u32 XBin_to_res_Get_S_AXI_resmap_V_TotalBytes(XBin_to_res *InstancePtr);
-u32 XBin_to_res_Get_S_AXI_resmap_V_BitWidth(XBin_to_res *InstancePtr);
-u32 XBin_to_res_Get_S_AXI_resmap_V_Depth(XBin_to_res *InstancePtr);
-u32 XBin_to_res_Write_S_AXI_resmap_V_Words(XBin_to_res *InstancePtr, int offset, int *data, int length);
-u32 XBin_to_res_Read_S_AXI_resmap_V_Words(XBin_to_res *InstancePtr, int offset, int *data, int length);
-u32 XBin_to_res_Write_S_AXI_resmap_V_Bytes(XBin_to_res *InstancePtr, int offset, char *data, int length);
-u32 XBin_to_res_Read_S_AXI_resmap_V_Bytes(XBin_to_res *InstancePtr, int offset, char *data, int length);
+u32 XBin_to_res_Get_resmap_V_BaseAddress(XBin_to_res *InstancePtr);
+u32 XBin_to_res_Get_resmap_V_HighAddress(XBin_to_res *InstancePtr);
+u32 XBin_to_res_Get_resmap_V_TotalBytes(XBin_to_res *InstancePtr);
+u32 XBin_to_res_Get_resmap_V_BitWidth(XBin_to_res *InstancePtr);
+u32 XBin_to_res_Get_resmap_V_Depth(XBin_to_res *InstancePtr);
+u32 XBin_to_res_Write_resmap_V_Words(XBin_to_res *InstancePtr, int offset, int *data, int length);
+u32 XBin_to_res_Read_resmap_V_Words(XBin_to_res *InstancePtr, int offset, int *data, int length);
+u32 XBin_to_res_Write_resmap_V_Bytes(XBin_to_res *InstancePtr, int offset, char *data, int length);
+u32 XBin_to_res_Read_resmap_V_Bytes(XBin_to_res *InstancePtr, int offset, char *data, int length);
 
 #ifdef __cplusplus
 }

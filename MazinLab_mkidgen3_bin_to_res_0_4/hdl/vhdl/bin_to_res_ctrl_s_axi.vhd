@@ -6,9 +6,9 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 
-entity bin_to_res_AXILiteS_s_axi is
+entity bin_to_res_ctrl_s_axi is
 generic (
-    C_S_AXI_ADDR_WIDTH    : INTEGER := 13;
+    C_S_AXI_ADDR_WIDTH    : INTEGER := 14;
     C_S_AXI_DATA_WIDTH    : INTEGER := 32);
 port (
     ACLK                  :in   STD_LOGIC;
@@ -33,29 +33,40 @@ port (
     RREADY                :in   STD_LOGIC;
     clk                   :in   STD_LOGIC;
     rst                   :in   STD_LOGIC;
-    S_AXI_resmap_V_address0 :in   STD_LOGIC_VECTOR(7 downto 0);
-    S_AXI_resmap_V_ce0    :in   STD_LOGIC;
-    S_AXI_resmap_V_q0     :out  STD_LOGIC_VECTOR(95 downto 0)
+    resmap_V_address0     :in   STD_LOGIC_VECTOR(7 downto 0);
+    resmap_V_ce0          :in   STD_LOGIC;
+    resmap_V_q0           :out  STD_LOGIC_VECTOR(95 downto 0);
+    align_V               :in   STD_LOGIC_VECTOR(8 downto 0);
+    align_V_ap_vld        :in   STD_LOGIC
 );
-end entity bin_to_res_AXILiteS_s_axi;
+end entity bin_to_res_ctrl_s_axi;
 
 -- ------------------------Address Info-------------------
--- 0x1000 ~
--- 0x1fff : Memory 'S_AXI_resmap_V' (256 * 96b)
---          Word 4n   : bit [31:0] - S_AXI_resmap_V[n][31: 0]
---          Word 4n+1 : bit [31:0] - S_AXI_resmap_V[n][63:32]
---          Word 4n+2 : bit [31:0] - S_AXI_resmap_V[n][95:64]
+-- 0x0000 : reserved
+-- 0x0004 : reserved
+-- 0x0008 : reserved
+-- 0x000c : reserved
+-- 0x2000 : Data signal of align_V
+--          bit 8~0 - align_V[8:0] (Read)
+--          others  - reserved
+-- 0x2004 : -- 0x1000 ~
+-- 0x1fff : Memory 'resmap_V' (256 * 96b)
+--          Word 4n   : bit [31:0] - resmap_V[n][31: 0]
+--          Word 4n+1 : bit [31:0] - resmap_V[n][63:32]
+--          Word 4n+2 : bit [31:0] - resmap_V[n][95:64]
 --          Word 4n+3 : bit [31:0] - reserved
 -- (SC = Self Clear, COR = Clear on Read, TOW = Toggle on Write, COH = Clear on Handshake)
 
-architecture behave of bin_to_res_AXILiteS_s_axi is
+architecture behave of bin_to_res_ctrl_s_axi is
     type states is (wridle, wrdata, wrresp, wrreset, rdidle, rddata, rdreset);  -- read and write fsm states
     signal wstate  : states := wrreset;
     signal rstate  : states := rdreset;
     signal wnext, rnext: states;
-    constant ADDR_S_AXI_RESMAP_V_BASE : INTEGER := 16#1000#;
-    constant ADDR_S_AXI_RESMAP_V_HIGH : INTEGER := 16#1fff#;
-    constant ADDR_BITS         : INTEGER := 13;
+    constant ADDR_ALIGN_V_DATA_0 : INTEGER := 16#2000#;
+    constant ADDR_ALIGN_V_CTRL   : INTEGER := 16#2004#;
+    constant ADDR_RESMAP_V_BASE  : INTEGER := 16#1000#;
+    constant ADDR_RESMAP_V_HIGH  : INTEGER := 16#1fff#;
+    constant ADDR_BITS         : INTEGER := 14;
 
     signal waddr               : UNSIGNED(ADDR_BITS-1 downto 0);
     signal wmask               : UNSIGNED(31 downto 0);
@@ -68,24 +79,26 @@ architecture behave of bin_to_res_AXILiteS_s_axi is
     signal WREADY_t            : STD_LOGIC;
     signal ARREADY_t           : STD_LOGIC;
     signal RVALID_t            : STD_LOGIC;
+    -- internal registers
+    signal int_align_V         : UNSIGNED(8 downto 0) := (others => '0');
     -- memory signals
-    signal int_S_AXI_resmap_V_address0 : UNSIGNED(7 downto 0);
-    signal int_S_AXI_resmap_V_ce0 : STD_LOGIC;
-    signal int_S_AXI_resmap_V_we0 : STD_LOGIC;
-    signal int_S_AXI_resmap_V_be0 : UNSIGNED(11 downto 0);
-    signal int_S_AXI_resmap_V_d0 : UNSIGNED(95 downto 0);
-    signal int_S_AXI_resmap_V_q0 : UNSIGNED(95 downto 0);
-    signal int_S_AXI_resmap_V_address1 : UNSIGNED(7 downto 0);
-    signal int_S_AXI_resmap_V_ce1 : STD_LOGIC;
-    signal int_S_AXI_resmap_V_we1 : STD_LOGIC;
-    signal int_S_AXI_resmap_V_be1 : UNSIGNED(11 downto 0);
-    signal int_S_AXI_resmap_V_d1 : UNSIGNED(95 downto 0);
-    signal int_S_AXI_resmap_V_q1 : UNSIGNED(95 downto 0);
-    signal int_S_AXI_resmap_V_read : STD_LOGIC;
-    signal int_S_AXI_resmap_V_write : STD_LOGIC;
-    signal int_S_AXI_resmap_V_shift : UNSIGNED(1 downto 0);
+    signal int_resmap_V_address0 : UNSIGNED(7 downto 0);
+    signal int_resmap_V_ce0    : STD_LOGIC;
+    signal int_resmap_V_we0    : STD_LOGIC;
+    signal int_resmap_V_be0    : UNSIGNED(11 downto 0);
+    signal int_resmap_V_d0     : UNSIGNED(95 downto 0);
+    signal int_resmap_V_q0     : UNSIGNED(95 downto 0);
+    signal int_resmap_V_address1 : UNSIGNED(7 downto 0);
+    signal int_resmap_V_ce1    : STD_LOGIC;
+    signal int_resmap_V_we1    : STD_LOGIC;
+    signal int_resmap_V_be1    : UNSIGNED(11 downto 0);
+    signal int_resmap_V_d1     : UNSIGNED(95 downto 0);
+    signal int_resmap_V_q1     : UNSIGNED(95 downto 0);
+    signal int_resmap_V_read   : STD_LOGIC;
+    signal int_resmap_V_write  : STD_LOGIC;
+    signal int_resmap_V_shift  : UNSIGNED(1 downto 0);
 
-    component bin_to_res_AXILiteS_s_axi_ram is
+    component bin_to_res_ctrl_s_axi_ram is
         generic (
             BYTES   : INTEGER :=4;
             DEPTH   : INTEGER :=256;
@@ -105,7 +118,7 @@ architecture behave of bin_to_res_AXILiteS_s_axi is
             be1     : in  UNSIGNED(BYTES-1 downto 0);
             d1      : in  UNSIGNED(BYTES*8-1 downto 0);
             q1      : out UNSIGNED(BYTES*8-1 downto 0));
-    end component bin_to_res_AXILiteS_s_axi_ram;
+    end component bin_to_res_ctrl_s_axi_ram;
 
     function log2 (x : INTEGER) return INTEGER is
         variable n, m : INTEGER;
@@ -121,27 +134,27 @@ architecture behave of bin_to_res_AXILiteS_s_axi is
 
 begin
 -- ----------------------- Instantiation------------------
--- int_S_AXI_resmap_V
-int_S_AXI_resmap_V : bin_to_res_AXILiteS_s_axi_ram
+-- int_resmap_V
+int_resmap_V : bin_to_res_ctrl_s_axi_ram
 generic map (
      BYTES    => 12,
      DEPTH    => 256,
      AWIDTH   => log2(256))
 port map (
      clk0     => clk,
-     address0 => int_S_AXI_resmap_V_address0,
-     ce0      => int_S_AXI_resmap_V_ce0,
-     we0      => int_S_AXI_resmap_V_we0,
-     be0      => int_S_AXI_resmap_V_be0,
-     d0       => int_S_AXI_resmap_V_d0,
-     q0       => int_S_AXI_resmap_V_q0,
+     address0 => int_resmap_V_address0,
+     ce0      => int_resmap_V_ce0,
+     we0      => int_resmap_V_we0,
+     be0      => int_resmap_V_be0,
+     d0       => int_resmap_V_d0,
+     q0       => int_resmap_V_q0,
      clk1     => ACLK,
-     address1 => int_S_AXI_resmap_V_address1,
-     ce1      => int_S_AXI_resmap_V_ce1,
-     we1      => int_S_AXI_resmap_V_we1,
-     be1      => int_S_AXI_resmap_V_be1,
-     d1       => int_S_AXI_resmap_V_d1,
-     q1       => int_S_AXI_resmap_V_q1);
+     address1 => int_resmap_V_address1,
+     ce1      => int_resmap_V_ce1,
+     we1      => int_resmap_V_we1,
+     be1      => int_resmap_V_be1,
+     d1       => int_resmap_V_d1,
+     q1       => int_resmap_V_q1);
 
 -- ----------------------- AXI WRITE ---------------------
     AWREADY_t <=  '1' when wstate = wridle else '0';
@@ -208,7 +221,7 @@ port map (
     ARREADY <= ARREADY_t;
     RDATA   <= STD_LOGIC_VECTOR(rdata_data);
     RRESP   <= "00";  -- OKAY
-    RVALID_t  <= '1' when (rstate = rddata) and (int_S_AXI_resmap_V_read = '0') else '0';
+    RVALID_t  <= '1' when (rstate = rddata) and (int_resmap_V_read = '0') else '0';
     RVALID    <= RVALID_t;
     ar_hs   <= ARVALID and ARREADY_t;
     raddr   <= UNSIGNED(ARADDR(ADDR_BITS-1 downto 0));
@@ -250,8 +263,15 @@ port map (
         if (ACLK'event and ACLK = '1') then
             if (ACLK_EN = '1') then
                 if (ar_hs = '1') then
-                elsif (int_S_AXI_resmap_V_read = '1') then
-                    rdata_data <= RESIZE(SHIFT_RIGHT(int_S_AXI_resmap_V_q1, TO_INTEGER(int_S_AXI_resmap_V_shift)*32), 32);
+                    case (TO_INTEGER(raddr)) is
+                    when ADDR_ALIGN_V_DATA_0 =>
+                        rdata_data <= RESIZE(int_align_V(8 downto 0), 32);
+                    when ADDR_ALIGN_V_CTRL =>
+                    when others =>
+                        rdata_data <= (others => '0');
+                    end case;
+                elsif (int_resmap_V_read = '1') then
+                    rdata_data <= RESIZE(SHIFT_RIGHT(int_resmap_V_q1, TO_INTEGER(int_resmap_V_shift)*32), 32);
                 end if;
             end if;
         end if;
@@ -259,30 +279,41 @@ port map (
 
 -- ----------------------- Register logic ----------------
 
+    process (clk)
+    begin
+        if (clk'event and clk = '1') then
+             if (rst = '1') then
+                 int_align_V <= (others => '0');
+             else
+                 int_align_V <= UNSIGNED(align_V); -- clear on read
+            end if;
+        end if;
+    end process;
+
 -- ----------------------- Memory logic ------------------
-    -- S_AXI_resmap_V
-    int_S_AXI_resmap_V_address0 <= UNSIGNED(S_AXI_resmap_V_address0);
-    int_S_AXI_resmap_V_ce0 <= S_AXI_resmap_V_ce0;
-    int_S_AXI_resmap_V_we0 <= '0';
-    int_S_AXI_resmap_V_be0 <= (others => '0');
-    int_S_AXI_resmap_V_d0 <= (others => '0');
-    S_AXI_resmap_V_q0    <= STD_LOGIC_VECTOR(RESIZE(int_S_AXI_resmap_V_q0, 96));
-    int_S_AXI_resmap_V_address1 <= raddr(11 downto 4) when ar_hs = '1' else waddr(11 downto 4);
-    int_S_AXI_resmap_V_ce1 <= '1' when ar_hs = '1' or (int_S_AXI_resmap_V_write = '1' and WVALID  = '1') else '0';
-    int_S_AXI_resmap_V_we1 <= '1' when int_S_AXI_resmap_V_write = '1' and WVALID = '1' else '0';
-    int_S_AXI_resmap_V_be1 <= SHIFT_LEFT(RESIZE(UNSIGNED(WSTRB), 12), TO_INTEGER(waddr(3 downto 2)) * 4);
-    int_S_AXI_resmap_V_d1 <= RESIZE(UNSIGNED(WDATA) & UNSIGNED(WDATA) & UNSIGNED(WDATA) & UNSIGNED(WDATA), 96);
+    -- resmap_V
+    int_resmap_V_address0 <= UNSIGNED(resmap_V_address0);
+    int_resmap_V_ce0     <= resmap_V_ce0;
+    int_resmap_V_we0     <= '0';
+    int_resmap_V_be0     <= (others => '0');
+    int_resmap_V_d0      <= (others => '0');
+    resmap_V_q0          <= STD_LOGIC_VECTOR(RESIZE(int_resmap_V_q0, 96));
+    int_resmap_V_address1 <= raddr(11 downto 4) when ar_hs = '1' else waddr(11 downto 4);
+    int_resmap_V_ce1     <= '1' when ar_hs = '1' or (int_resmap_V_write = '1' and WVALID  = '1') else '0';
+    int_resmap_V_we1     <= '1' when int_resmap_V_write = '1' and WVALID = '1' else '0';
+    int_resmap_V_be1     <= SHIFT_LEFT(RESIZE(UNSIGNED(WSTRB), 12), TO_INTEGER(waddr(3 downto 2)) * 4);
+    int_resmap_V_d1      <= RESIZE(UNSIGNED(WDATA) & UNSIGNED(WDATA) & UNSIGNED(WDATA) & UNSIGNED(WDATA), 96);
 
     process (ACLK)
     begin
         if (ACLK'event and ACLK = '1') then
             if (ARESET = '1') then
-                int_S_AXI_resmap_V_read <= '0';
+                int_resmap_V_read <= '0';
             elsif (ACLK_EN = '1') then
-                if (ar_hs = '1' and raddr >= ADDR_S_AXI_RESMAP_V_BASE and raddr <= ADDR_S_AXI_RESMAP_V_HIGH) then
-                    int_S_AXI_resmap_V_read <= '1';
+                if (ar_hs = '1' and raddr >= ADDR_RESMAP_V_BASE and raddr <= ADDR_RESMAP_V_HIGH) then
+                    int_resmap_V_read <= '1';
                 else
-                    int_S_AXI_resmap_V_read <= '0';
+                    int_resmap_V_read <= '0';
                 end if;
             end if;
         end if;
@@ -292,12 +323,12 @@ port map (
     begin
         if (ACLK'event and ACLK = '1') then
             if (ARESET = '1') then
-                int_S_AXI_resmap_V_write <= '0';
+                int_resmap_V_write <= '0';
             elsif (ACLK_EN = '1') then
-                if (aw_hs = '1' and UNSIGNED(AWADDR(ADDR_BITS-1 downto 0)) >= ADDR_S_AXI_RESMAP_V_BASE and UNSIGNED(AWADDR(ADDR_BITS-1 downto 0)) <= ADDR_S_AXI_RESMAP_V_HIGH) then
-                    int_S_AXI_resmap_V_write <= '1';
+                if (aw_hs = '1' and UNSIGNED(AWADDR(ADDR_BITS-1 downto 0)) >= ADDR_RESMAP_V_BASE and UNSIGNED(AWADDR(ADDR_BITS-1 downto 0)) <= ADDR_RESMAP_V_HIGH) then
+                    int_resmap_V_write <= '1';
                 elsif (WVALID = '1') then
-                    int_S_AXI_resmap_V_write <= '0';
+                    int_resmap_V_write <= '0';
                 end if;
             end if;
         end if;
@@ -308,7 +339,7 @@ port map (
         if (clk'event and clk = '1') then
             if (ACLK_EN = '1') then
                 if (ar_hs = '1') then
-                    int_S_AXI_resmap_V_shift <= raddr(3 downto 2);
+                    int_resmap_V_shift <= raddr(3 downto 2);
                 end if;
             end if;
         end if;
@@ -321,7 +352,7 @@ library IEEE;
 USE IEEE.std_logic_1164.all;
 USE IEEE.numeric_std.all;
 
-entity bin_to_res_AXILiteS_s_axi_ram is
+entity bin_to_res_ctrl_s_axi_ram is
     generic (
         BYTES   : INTEGER :=4;
         DEPTH   : INTEGER :=256;
@@ -342,9 +373,9 @@ entity bin_to_res_AXILiteS_s_axi_ram is
         d1      : in  UNSIGNED(BYTES*8-1 downto 0);
         q1      : out UNSIGNED(BYTES*8-1 downto 0));
 
-end entity bin_to_res_AXILiteS_s_axi_ram;
+end entity bin_to_res_ctrl_s_axi_ram;
 
-architecture behave of bin_to_res_AXILiteS_s_axi_ram is
+architecture behave of bin_to_res_ctrl_s_axi_ram is
     signal address0_tmp : UNSIGNED(AWIDTH-1 downto 0);
     signal address1_tmp : UNSIGNED(AWIDTH-1 downto 0);
     type RAM_T is array (0 to DEPTH - 1) of UNSIGNED(BYTES*8 - 1 downto 0);

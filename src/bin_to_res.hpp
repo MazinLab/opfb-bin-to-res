@@ -28,7 +28,8 @@ typedef struct opfb_stream_t{
 } opfb_stream_t;
 
 void bin_to_res(opfb_stream_t &i_stream, opfb_stream_t &q_stream,
-				resstream_t &out, binndx_t rid_to_bin[N_GROUPS][N_RES_PCLK]);
+				resstream_t &out, binndx_t rid_to_bin[N_GROUPS][N_RES_PCLK],
+				ap_int<9> *group_align);
 
 
 #endif

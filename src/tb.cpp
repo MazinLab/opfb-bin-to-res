@@ -40,6 +40,7 @@
 int main() {
 
 	//Setup
+	ap_int<9> group_alignment;
 	binndx_t rid_to_bin[N_GROUPS][N_RES_PCLK];
 	opfb_stream_t istream[N_OPFB_CYCLES][N_GROUPS], qstream[N_OPFB_CYCLES][N_GROUPS];
 	resstream_t out[N_OPFB_CYCLES][N_GROUPS];
@@ -91,7 +92,9 @@ int main() {
 		}
 
 		//Call core
-		for (int j=0;j<N_GROUPS; j++) bin_to_res(itmp[j], qtmp[j], otmp[j], rid_to_bin);
+		for (int j=0;j<N_GROUPS; j++) bin_to_res(itmp[j], qtmp[j], otmp[j], rid_to_bin,
+			 group_alignment);
+		if (group_alignment!=0) std::cout<<"Groups misaligned: "<<group_alignment<<"\n";
 
 		//Copy out, trying to figure out cosim fail
 		for (int j=0;j<N_GROUPS;j++)
