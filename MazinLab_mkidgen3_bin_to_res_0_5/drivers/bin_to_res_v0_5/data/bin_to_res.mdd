@@ -6,11 +6,11 @@ OPTION psf_version = 2.1;
 
 BEGIN driver bin_to_res
 
- OPTION supported_peripherals = (bin_to_res_v0_4 );
+ OPTION supported_peripherals = (bin_to_res_v0_5 );
  OPTION driver_state = ACTIVE;
  OPTION copyfiles = all;
  OPTION name = bin_to_res;
- OPTION version = 0.4;
+ OPTION version = 0.5;
 
 END driver
 

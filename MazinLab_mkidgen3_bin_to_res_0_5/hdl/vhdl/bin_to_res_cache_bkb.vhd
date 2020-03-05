@@ -37,9 +37,21 @@ attribute syn_ramstyle : string;
 attribute syn_ramstyle of ram : variable is "block_ram";
 attribute ram_style : string;
 attribute ram_style of ram : variable is MEM_TYPE;
+signal q1_t0 : std_logic_vector(DWIDTH-1 downto 0);
+signal q1_t1 : std_logic_vector(DWIDTH-1 downto 0);
 
 begin 
 
+q1 <= q1_t1;
+
+p_IO_pipeline_reg : process (clk)  
+begin
+    if (clk'event and clk = '1') then
+      if (ce1 = '1') then
+        q1_t1 <= q1_t0;
+      end if;
+    end if;
+end process;
 
 
 p_memory_access_0: process (clk)  
@@ -69,7 +81,7 @@ p_memory_access_1: process (clk)
 begin 
     if (clk'event and clk = '1') then
         if (ce1 = '1') then 
-            q1 <= ram(CONV_INTEGER(addr1_tmp));
+            q1_t0 <= ram(CONV_INTEGER(addr1_tmp));
         end if;
     end if;
 end process;

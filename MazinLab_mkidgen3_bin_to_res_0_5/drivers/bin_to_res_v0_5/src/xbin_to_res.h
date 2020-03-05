@@ -37,12 +37,12 @@ typedef uint32_t u32;
 #else
 typedef struct {
     u16 DeviceId;
-    u32 Ctrl_BaseAddress;
+    u32 Control_BaseAddress;
 } XBin_to_res_Config;
 #endif
 
 typedef struct {
-    u32 Ctrl_BaseAddress;
+    u32 Control_BaseAddress;
     u32 IsReady;
 } XBin_to_res;
 

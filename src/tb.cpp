@@ -42,7 +42,7 @@ int main() {
 	//Setup
 	ap_int<9> group_alignment;
 	binndx_t rid_to_bin[N_GROUPS][N_RES_PCLK];
-	opfb_stream_t istream[N_OPFB_CYCLES][N_GROUPS], qstream[N_OPFB_CYCLES][N_GROUPS];
+	opfb_stream_t iqstream[N_OPFB_CYCLES][N_GROUPS];
 	resstream_t out[N_OPFB_CYCLES][N_GROUPS];
 	bool fail=false;
 
@@ -50,11 +50,11 @@ int main() {
 	for (int i=0;i<N_OPFB_CYCLES;i++) {
 		for (int j=0;j<N_GROUPS;j++) {
 			for (int k=0; k<N_BIN_PCLK; k++) {
-				istream[i][j].data[k]=i*N_PFB_BINS + (j*N_BIN_PCLK+k);
-				qstream[i][j].data[k]=(i+1)*N_PFB_BINS -(j*N_BIN_PCLK+k);
+				iq_t tmp;
+				tmp=(i*N_PFB_BINS + (j*N_BIN_PCLK+k)) | (((i+1)*N_PFB_BINS -(j*N_BIN_PCLK+k))<<16);
+				iqstream[i][j].data[k]=tmp;
 			}
-			istream[i][j].last=j==N_GROUPS-1;
-			qstream[i][j].last=j==N_GROUPS-1;
+			iqstream[i][j].last=j==N_GROUPS-1;
 		}
 	}
 
@@ -84,21 +84,18 @@ int main() {
 	for (int i=0;i<N_OPFB_CYCLES;i++) {
 
 		//Copy in, trying to figure out cosim fail
-		static opfb_stream_t itmp[N_GROUPS], qtmp[N_GROUPS];
+		static opfb_stream_t iqtmp[N_GROUPS];
 		static resstream_t otmp[N_GROUPS];
-		for (int j=0;j<N_GROUPS;j++){
-			itmp[j]=istream[i][j];
-			qtmp[j]=qstream[i][j];
-		}
+		for (int j=0;j<N_GROUPS;j++) iqtmp[j]=iqstream[i][j];
 
 		//Call core
-		for (int j=0;j<N_GROUPS; j++) bin_to_res(itmp[j], qtmp[j], otmp[j], rid_to_bin,
-			 group_alignment);
+		for (int j=0;j<N_GROUPS; j++)
+			bin_to_res(iqtmp[j], otmp[j], rid_to_bin, group_alignment);
+
 		if (group_alignment!=0) std::cout<<"Groups misaligned: "<<group_alignment<<"\n";
 
 		//Copy out, trying to figure out cosim fail
-		for (int j=0;j<N_GROUPS;j++)
-			out[i][j]=otmp[j];
+		for (int j=0;j<N_GROUPS;j++) out[i][j]=otmp[j];
 	}
 
 	//Compare results
@@ -109,14 +106,14 @@ int main() {
 				unsigned int bin=rid_to_bin[j][k].to_uint();
 				unsigned int group=bin/N_BIN_PCLK;
 				unsigned int ndx=bin%N_BIN_PCLK;
-				iq_t expected=iq_t(istream[i][group].data[ndx], qstream[i][group].data[ndx]);
+				iq_t expected=iqstream[i][group].data[ndx];
 				std::cout<<"Out "<<i<<","<<j<<","<<k<<": "<<out[i][j].data[k];
 				std::cout<<" Bin: "<<bin<<" ("<<group<<","<<ndx<<")";
 				std::cout<<" Expected: "<<expected<<"\n";
 				if (out[i][j].data[k] != expected ) {
 					fail|=true;
 				}
-				if(out[i][j].last != istream[i][j].last){
+				if(out[i][j].last != iqstream[i][j].last){
 					std::cout<<"last mismatch!!!!\n";
 					fail|=true;
 				}

@@ -3,7 +3,7 @@
 // Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // ==============================================================
 `timescale 1ns/1ps
-module bin_to_res_ctrl_s_axi
+module bin_to_res_control_s_axi
 #(parameter
     C_S_AXI_ADDR_WIDTH = 14,
     C_S_AXI_DATA_WIDTH = 32
@@ -100,7 +100,7 @@ localparam
 
 //------------------------Instantiation------------------
 // int_resmap_V
-bin_to_res_ctrl_s_axi_ram #(
+bin_to_res_control_s_axi_ram #(
     .BYTES    ( 12 ),
     .DEPTH    ( 256 )
 ) int_resmap_V (
@@ -282,7 +282,7 @@ endmodule
 
 `timescale 1ns/1ps
 
-module bin_to_res_ctrl_s_axi_ram
+module bin_to_res_control_s_axi_ram
 #(parameter
     BYTES  = 4,
     DEPTH  = 256,

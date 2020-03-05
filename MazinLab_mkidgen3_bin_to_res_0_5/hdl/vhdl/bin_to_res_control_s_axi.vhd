@@ -6,7 +6,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 
-entity bin_to_res_ctrl_s_axi is
+entity bin_to_res_control_s_axi is
 generic (
     C_S_AXI_ADDR_WIDTH    : INTEGER := 14;
     C_S_AXI_DATA_WIDTH    : INTEGER := 32);
@@ -39,7 +39,7 @@ port (
     align_V               :in   STD_LOGIC_VECTOR(8 downto 0);
     align_V_ap_vld        :in   STD_LOGIC
 );
-end entity bin_to_res_ctrl_s_axi;
+end entity bin_to_res_control_s_axi;
 
 -- ------------------------Address Info-------------------
 -- 0x0000 : reserved
@@ -57,7 +57,7 @@ end entity bin_to_res_ctrl_s_axi;
 --          Word 4n+3 : bit [31:0] - reserved
 -- (SC = Self Clear, COR = Clear on Read, TOW = Toggle on Write, COH = Clear on Handshake)
 
-architecture behave of bin_to_res_ctrl_s_axi is
+architecture behave of bin_to_res_control_s_axi is
     type states is (wridle, wrdata, wrresp, wrreset, rdidle, rddata, rdreset);  -- read and write fsm states
     signal wstate  : states := wrreset;
     signal rstate  : states := rdreset;
@@ -98,7 +98,7 @@ architecture behave of bin_to_res_ctrl_s_axi is
     signal int_resmap_V_write  : STD_LOGIC;
     signal int_resmap_V_shift  : UNSIGNED(1 downto 0);
 
-    component bin_to_res_ctrl_s_axi_ram is
+    component bin_to_res_control_s_axi_ram is
         generic (
             BYTES   : INTEGER :=4;
             DEPTH   : INTEGER :=256;
@@ -118,7 +118,7 @@ architecture behave of bin_to_res_ctrl_s_axi is
             be1     : in  UNSIGNED(BYTES-1 downto 0);
             d1      : in  UNSIGNED(BYTES*8-1 downto 0);
             q1      : out UNSIGNED(BYTES*8-1 downto 0));
-    end component bin_to_res_ctrl_s_axi_ram;
+    end component bin_to_res_control_s_axi_ram;
 
     function log2 (x : INTEGER) return INTEGER is
         variable n, m : INTEGER;
@@ -135,7 +135,7 @@ architecture behave of bin_to_res_ctrl_s_axi is
 begin
 -- ----------------------- Instantiation------------------
 -- int_resmap_V
-int_resmap_V : bin_to_res_ctrl_s_axi_ram
+int_resmap_V : bin_to_res_control_s_axi_ram
 generic map (
      BYTES    => 12,
      DEPTH    => 256,
@@ -352,7 +352,7 @@ library IEEE;
 USE IEEE.std_logic_1164.all;
 USE IEEE.numeric_std.all;
 
-entity bin_to_res_ctrl_s_axi_ram is
+entity bin_to_res_control_s_axi_ram is
     generic (
         BYTES   : INTEGER :=4;
         DEPTH   : INTEGER :=256;
@@ -373,9 +373,9 @@ entity bin_to_res_ctrl_s_axi_ram is
         d1      : in  UNSIGNED(BYTES*8-1 downto 0);
         q1      : out UNSIGNED(BYTES*8-1 downto 0));
 
-end entity bin_to_res_ctrl_s_axi_ram;
+end entity bin_to_res_control_s_axi_ram;
 
-architecture behave of bin_to_res_ctrl_s_axi_ram is
+architecture behave of bin_to_res_control_s_axi_ram is
     signal address0_tmp : UNSIGNED(AWIDTH-1 downto 0);
     signal address1_tmp : UNSIGNED(AWIDTH-1 downto 0);
     type RAM_T is array (0 to DEPTH - 1) of UNSIGNED(BYTES*8 - 1 downto 0);

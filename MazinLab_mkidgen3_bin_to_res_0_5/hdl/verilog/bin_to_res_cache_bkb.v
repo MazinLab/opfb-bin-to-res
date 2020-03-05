@@ -15,15 +15,26 @@ input[DWIDTH-1:0] d0;
 input we0;
 input[AWIDTH-1:0] addr1;
 input ce1;
-output reg[DWIDTH-1:0] q1;
+output wire[DWIDTH-1:0] q1;
 input clk;
 
 (* ram_style = "block" *)reg [DWIDTH-1:0] ram[0:MEM_SIZE-1];
+reg [DWIDTH-1:0] q1_t0;
+reg [DWIDTH-1:0] q1_t1;
 
 initial begin
     $readmemh("./bin_to_res_cache_bkb_ram.dat", ram);
 end
 
+assign q1 = q1_t1;
+
+always @(posedge clk)  
+begin
+    if (ce1) 
+    begin
+        q1_t1 <= q1_t0;
+    end
+end
 
 
 always @(posedge clk)  
@@ -38,7 +49,7 @@ end
 always @(posedge clk)  
 begin 
     if (ce1) begin
-        q1 <= ram[addr1];
+        q1_t0 <= ram[addr1];
     end
 end
 
