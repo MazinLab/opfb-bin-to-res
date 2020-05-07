@@ -39,6 +39,7 @@ void bin_to_res(opfb_stream_t &iq_stream, resstream_t &res_stream,
 	//Load the correct values from the cache
 	resstream_t temp;
 	temp.last=replay_group==N_GROUPS-1;
+	temp.user=replay_group;
 	readcaches: for (unsigned int i=0; i<N_RES_PCLK; i++)
 		temp.data[i]=cache[i][rid_to_bin[replay_group][i]];
 	res_stream=temp;

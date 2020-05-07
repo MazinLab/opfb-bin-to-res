@@ -19,6 +19,7 @@ typedef unsigned int iq_t;
 typedef struct resIQ_stream_t{
 	iq_t data[N_RES_PCLK];
 	ap_uint<1> last;
+	ap_uint<8> user;
 //	ap_uint<32> keep;
 } resstream_t;
 
