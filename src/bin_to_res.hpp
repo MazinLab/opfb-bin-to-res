@@ -7,7 +7,6 @@
 #define N_BIN_PCLK 16
 #define N_PFB_BINS 4096
 #define N_GROUPS 256
-//#define N_RESONATORS 2048
 #define N_RES_PCLK 8
 
 
@@ -20,7 +19,6 @@ typedef struct resIQ_stream_t{
 	iq_t data[N_RES_PCLK];
 	ap_uint<1> last;
 	ap_uint<8> user;
-//	ap_uint<32> keep;
 } resstream_t;
 
 typedef struct opfb_stream_t{
