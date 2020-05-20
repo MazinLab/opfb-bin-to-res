@@ -10,11 +10,10 @@ Fetch the bins for each address and load the output stream.
 Write the 16 new bins.
 */
 void bin_to_res(opfb_stream_t &iq_stream, resstream_t &res_stream,
-				binndx_t rid_to_bin[N_GROUPS][N_RES_PCLK],
-				ap_int<9> &group_align											   	   ) {
+				binndx_t rid_to_bin[N_GROUPS][N_RES_PCLK], ap_int<9> &group_align) {
 #pragma HLS PIPELINE II=1
-#pragma HLS INTERFACE axis register reverse port=iq_stream
-#pragma HLS INTERFACE axis register forward port=res_stream
+#pragma HLS INTERFACE axis register port=iq_stream
+#pragma HLS INTERFACE axis register port=res_stream
 #pragma HLS INTERFACE s_axilite port=rid_to_bin clock=S_AXI_clk name=resmap bundle=control
 #pragma HLS INTERFACE s_axilite port=group_align clock=S_AXI_clk name=align bundle=control
 #pragma HLS INTERFACE ap_ctrl_none port=return
