@@ -42,8 +42,8 @@ int main() {
 	//Setup
 	ap_int<9> group_alignment;
 	binndx_t rid_to_bin[N_GROUPS][N_RES_PCLK];
-	opfb_stream_t iqstream[N_OPFB_CYCLES][N_GROUPS];
-	resstream_t out[N_OPFB_CYCLES][N_GROUPS];
+	opfb_stream_array_t iqstream[N_OPFB_CYCLES][N_GROUPS];
+	resstream_array_t out[N_OPFB_CYCLES][N_GROUPS];
 	bool fail=false;
 
 	//i counts up, q counts down, both shifted by cycle (so 0-4095 & 4095-0, 4096-8191 & 8191-4096, ...)
@@ -73,29 +73,49 @@ int main() {
 	//		bin2resmap[i/N_BIN_PCLK].data[i%N_BIN_PCLK] = binmap_t(in_bin);
 	//	}
 	//	fclose(fp);
+
+	binndxword_t rid_to_bin_packed[N_GROUPS];
 	int res=0;
 	for (int j=0;j<N_GROUPS;j++) {
-		for (int k=0; k<N_RES_PCLK; k++)
+		for (int k=0; k<N_RES_PCLK; k++) {
 			rid_to_bin[j][k]=res++; //Add 2048 here to vet the core in an alternate manner
+			rid_to_bin_packed[j].range(12*(k+1)-1,12*k)=rid_to_bin[j][k];
+		}
+
 	}
+
+
 
 	//Run core
 	//NB w/o static copy arguments the cosim TB sigsegv!
 	for (int i=0;i<N_OPFB_CYCLES;i++) {
 
 		//Copy in, trying to figure out cosim fail
-		static opfb_stream_t iqtmp[N_GROUPS];
-		static resstream_t otmp[N_GROUPS];
-		for (int j=0;j<N_GROUPS;j++) iqtmp[j]=iqstream[i][j];
+//		static opfb_stream_t iqtmp[N_GROUPS];
+//		static resstream_t otmp[N_GROUPS];
+//		for (int j=0;j<N_GROUPS;j++) iqtmp[j]=iqstream[i][j];
 
 		//Call core
-		for (int j=0;j<N_GROUPS; j++)
-			bin_to_res(iqtmp[j], otmp[j], rid_to_bin, group_alignment);
+		for (int j=0;j<N_GROUPS; j++) {
+			opfb_stream_t corein;
+			resstream_t coreout;
+			for (int k=0;k<N_BIN_PCLK;k++) corein.data.range(32*(k+1)-1, 32*k)=iqstream[i][j].data[k];
+			corein.last=iqstream[i][j].last;
+			hls::stream<opfb_stream_t> streamin;
+			hls::stream<resstream_t> streamout;
+			streamin.write(corein);
+			bin_to_res(streamin, streamout, rid_to_bin_packed);
+			streamout.read(coreout);
+			for (int k=0;k<N_RES_PCLK;k++) out[i][j].data[k]=coreout.data.range(32*(k+1)-1, 32*k);
+			out[i][j].last=coreout.last;
+			out[i][j].user=coreout.user;
+		}
 
+		group_alignment=0;
 		if (group_alignment!=0) std::cout<<"Groups misaligned: "<<group_alignment<<"\n";
 
 		//Copy out, trying to figure out cosim fail
-		for (int j=0;j<N_GROUPS;j++) out[i][j]=otmp[j];
+//		for (int j=0;j<N_GROUPS;j++) out[i][j]=otmp[j];
 	}
 
 	//Compare results
@@ -107,9 +127,11 @@ int main() {
 				unsigned int group=bin/N_BIN_PCLK;
 				unsigned int ndx=bin%N_BIN_PCLK;
 				iq_t expected=iqstream[i][group].data[ndx];
-				std::cout<<"Out "<<i<<","<<j<<","<<k<<": "<<out[i][j].data[k];
-				std::cout<<" Bin: "<<bin<<" ("<<group<<","<<ndx<<")";
-				std::cout<<" Expected: "<<expected<<"\n";
+				if ((out[i][j].last != iqstream[i][j].last) | (out[i][j].data[k] != expected ) ){
+					std::cout<<"Out "<<i<<","<<j<<","<<k<<": "<<out[i][j].data[k];
+					std::cout<<" Bin: "<<bin<<" ("<<group<<","<<ndx<<")";
+					std::cout<<" Expected: "<<expected<<"\n";
+				}
 				if (out[i][j].data[k] != expected ) {
 					fail|=true;
 				}
