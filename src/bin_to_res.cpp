@@ -25,7 +25,7 @@ void bin_to_res(hls::stream<opfb_stream_t> &iq_stream, hls::stream<resstream_t> 
 #pragma HLS PIPELINE II=1
 #pragma HLS INTERFACE axis register port=iq_stream
 #pragma HLS INTERFACE axis register port=res_stream
-#pragma HLS INTERFACE s_axilite port=rid_to_bin name=resmap bundle=control
+#pragma HLS INTERFACE s_axilite port=rid_to_bin name=resmap bundle=control clock=axi_clk
 #pragma HLS INTERFACE ap_ctrl_none port=return
 
 	// Cache
